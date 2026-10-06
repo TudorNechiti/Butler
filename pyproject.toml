@@ -24,7 +24,8 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["core", "tests"]
+files = ["core", "agents", "tests"]
+explicit_package_bases = true
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
