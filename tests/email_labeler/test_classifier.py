@@ -17,6 +17,15 @@ def test_system_prompt_defines_every_category() -> None:
         assert f"- {category.value}:" in prompt
 
 
+def test_system_prompt_keeps_the_owner_decisions() -> None:
+    # Decided by the mailbox owner: collection agencies are always debts, cancellations are
+    # other. Guard against these rules being lost in a later prompt edit.
+    prompt = load_system_prompt()
+    assert "Any email from a collection agency or bailiff is debts" in prompt
+    assert "cancellations of appointments" in prompt
+    assert "Dutch" in prompt and "Romanian" in prompt
+
+
 def test_user_message_wraps_email_in_delimiters() -> None:
     message = build_user_message(make_email())
 

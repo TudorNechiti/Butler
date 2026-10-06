@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel
 
+from agents.email_labeler.gmail import GROUP_LABELS, PROCESSED_LABEL
 from agents.email_labeler.models import Category, Classification, EmailMessage
 
 
@@ -44,3 +45,37 @@ def classification(
     category: Category = Category.DEBTS, confidence: float = 0.95, reason: str = "Unpaid invoice"
 ) -> Classification:
     return Classification(category=category, confidence=confidence, reason=reason)
+
+
+class FakeMailbox:
+    """In-memory Gmail: emails by id, plus a record of every label written."""
+
+    def __init__(self, emails: list[EmailMessage], fail_get: set[str] | None = None) -> None:
+        self.emails = {e.id: e for e in emails}
+        self.fail_get = fail_get or set()
+        self.ensure_labels_calls = 0
+        self.added: dict[str, list[str]] = {}
+
+    def list_unprocessed(self, limit: int, newer_than_days: int = 3) -> list[str]:
+        return list(self.emails)[:limit]
+
+    def get(self, message_id: str) -> EmailMessage:
+        if message_id in self.fail_get:
+            raise ConnectionError(f"boom while reading {self.emails[message_id].subject}")
+        return self.emails[message_id]
+
+    def ensure_labels(self) -> dict[str, str]:
+        self.ensure_labels_calls += 1
+        names = [*GROUP_LABELS, PROCESSED_LABEL]
+        return {name: f"id:{name}" for name in names}
+
+    def add_labels(self, message_id: str, label_ids: list[str]) -> None:
+        self.added[message_id] = label_ids
+
+
+class FakeAlert:
+    def __init__(self) -> None:
+        self.messages: list[str] = []
+
+    def __call__(self, text: str) -> None:
+        self.messages.append(text)

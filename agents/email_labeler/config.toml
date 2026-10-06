@@ -1,0 +1,8 @@
+# Non-secret settings for the email labeler. Secrets live in .env / repository secrets.
+
+model = "claude-haiku-4-5"   # must have a price in core/llm.py
+max_tokens = 256             # the answer is a tiny JSON object
+max_items = 50               # emails per run; also the per-run cap on Claude calls
+newer_than_days = 3          # never look further back (no accidental backfill)
+body_chars = 3000            # email body is cut to this before it reaches Claude
+review_threshold = 0.6       # below this confidence the email goes to Butler/Review
