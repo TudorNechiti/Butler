@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "anthropic>=1.11,<2",  # pinned below next major: SDK majors break APIs
+    "google-api-python-client>=2,<3",
+    "google-auth>=2,<3",
     "httpx>=0.28,<1",
     "pydantic-settings>=2.15,<3",
 ]
@@ -24,7 +26,7 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["core", "agents", "tests"]
+files = ["core", "agents", "scripts", "tests"]
 explicit_package_bases = true
 
 [tool.pytest.ini_options]
@@ -37,7 +39,13 @@ markers = [
 
 [dependency-groups]
 dev = [
+    "google-auth-oauthlib>=1,<2",
     "mypy>=2.4.0",
     "pytest>=9.1.1",
     "ruff>=0.16.10",
 ]
+
+[[tool.mypy.overrides]]
+# Google's client libraries ship without type hints.
+module = ["googleapiclient.*", "google_auth_oauthlib.*", "google.oauth2.*", "google.auth.*"]
+ignore_missing_imports = true
