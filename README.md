@@ -4,7 +4,7 @@ Personal AI agents I use day to day, sharing one small core.
 
 | Agent | Status |
 |---|---|
-| Email labeler | in progress |
+| Email labeler | running hourly on GitHub Actions |
 | Job scout | planned |
 | Stock news digest | planned |
 

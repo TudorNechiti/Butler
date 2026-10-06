@@ -1,0 +1,47 @@
+name: Email labeler
+
+on:
+  schedule:
+    - cron: "17 * * * *" # hourly, off the top of the hour when GitHub's scheduler is busiest
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Classify only, write nothing to Gmail"
+        type: boolean
+        default: true
+      max:
+        description: "Max emails this run (empty = config default)"
+        type: string
+        default: "5"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: email-labeler # never two runs at once
+  cancel-in-progress: false
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked --no-dev
+      - name: Run labeler
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
+          GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+          GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
+          # Inputs go through env, never straight into the script, to avoid shell injection.
+          DRY_RUN: ${{ inputs.dry_run }}
+          MAX_ITEMS: ${{ inputs.max }}
+        run: |
+          args=()
+          if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          if [ -n "$MAX_ITEMS" ]; then args+=(--max "$MAX_ITEMS"); fi
+          uv run --no-dev python -m agents.email_labeler "${args[@]}"
