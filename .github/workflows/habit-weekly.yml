@@ -1,0 +1,39 @@
+name: Habit weekly report
+
+on:
+  schedule:
+    # Sunday 20:00 Berlin is 18:00 UTC in summer and 19:00 UTC in winter; the code keeps the
+    # one that matches.
+    - cron: "13 18 * * 0"
+    - cron: "13 19 * * 0"
+  workflow_dispatch: # manual run: reports the current week so far, sent to Telegram
+
+permissions:
+  contents: read
+
+concurrency:
+  group: habit-weekly
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked --no-dev
+      # No --dry-run here: Actions logs of this public repo are public, and the report holds
+      # personal numbers. It only ever goes to the private Telegram chat.
+      - name: Send weekly report
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          HABIT_SHEET_ID: ${{ secrets.HABIT_SHEET_ID }}
+          HABIT_FORM_URL: ${{ secrets.HABIT_FORM_URL }}
+          HABIT_SA_KEY_JSON: ${{ secrets.HABIT_SA_KEY_JSON }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          args=()
+          if [ "$EVENT" = "workflow_dispatch" ]; then args+=(--force); fi
+          uv run --no-dev python -m agents.habit_tracker weekly "${args[@]}"

@@ -1,0 +1,37 @@
+name: Habit reminder
+
+on:
+  schedule:
+    # Cron is UTC. 21:00 Berlin is 19:00 UTC in summer and 20:00 UTC in winter, so both run
+    # and the code exits unless it is really the reminder hour in Berlin.
+    - cron: "7 19 * * *"
+    - cron: "7 20 * * *"
+  workflow_dispatch: # manual run: ignores the hour check and sends for real
+
+permissions:
+  contents: read
+
+concurrency:
+  group: habit-reminder
+  cancel-in-progress: false
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked --no-dev
+      - name: Send reminder if today is not logged
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          HABIT_SHEET_ID: ${{ secrets.HABIT_SHEET_ID }}
+          HABIT_FORM_URL: ${{ secrets.HABIT_FORM_URL }}
+          HABIT_SA_KEY_JSON: ${{ secrets.HABIT_SA_KEY_JSON }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          args=()
+          if [ "$EVENT" = "workflow_dispatch" ]; then args+=(--force); fi
+          uv run --no-dev python -m agents.habit_tracker reminder "${args[@]}"
