@@ -40,6 +40,18 @@ def test_missing_secret_fails_fast(monkeypatch: pytest.MonkeyPatch) -> None:
         _settings()
 
 
+def test_validation_error_does_not_echo_other_secrets(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "bot-token-456")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "42")
+
+    with pytest.raises(ValidationError) as excinfo:
+        _settings()
+
+    assert "bot-token-456" not in str(excinfo.value)
+    assert "token-456" not in str(excinfo.value)
+
+
 def test_load_toml(tmp_path: Path) -> None:
     path = tmp_path / "config.toml"
     path.write_text('model = "claude-haiku-4-5"\nmax_items = 50\n', encoding="utf-8")

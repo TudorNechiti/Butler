@@ -15,14 +15,26 @@ from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
-    """Secrets shared by every agent. Agents subclass this to add their own."""
+class TelegramSettings(BaseSettings):
+    """Secrets every agent needs. Agents that don't call Claude subclass this one."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        # Validation errors otherwise echo the input values, i.e. the other secrets, into
+        # (public) CI logs when one variable is missing.
+        hide_input_in_errors=True,
+    )
 
-    anthropic_api_key: SecretStr
     telegram_bot_token: SecretStr
     telegram_chat_id: str
+
+
+class Settings(TelegramSettings):
+    """Secrets for agents that call Claude. Agents subclass this to add their own."""
+
+    anthropic_api_key: SecretStr
 
 
 def load_toml(path: Path) -> dict[str, Any]:
