@@ -10,6 +10,7 @@ dependencies = [
     "google-auth>=2,<3",
     "httpx>=0.28,<1",
     "pydantic-settings>=2.15,<3",
+    "tzdata>=2026.5 ; sys_platform == 'win32'",
 ]
 
 [tool.uv]
@@ -47,5 +48,7 @@ dev = [
 
 [[tool.mypy.overrides]]
 # Google's client libraries ship without type hints.
-module = ["googleapiclient.*", "google_auth_oauthlib.*", "google.oauth2.*", "google.auth.*"]
+module = [
+    "googleapiclient.*", "google_auth_oauthlib.*", "google.oauth2.*", "google.auth.*", "httplib2.*",
+]
 ignore_missing_imports = true

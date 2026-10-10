@@ -1,0 +1,45 @@
+# Non-secret settings for the habit tracker. Secrets live in .env / repository secrets.
+
+timezone = "Europe/Berlin"
+day_starts_at_hour = 4       # a submission at 00:30 still counts for the previous day
+trial_start = 2026-10-12     # first Monday of the 4-week trial
+active_phase = "phase1"      # switch by hand after reviewing week 2 (target: >= 80% of phase 1)
+reminder_hour = 21           # local time; sends only if today is not logged
+weekly_report_hour = 20      # local time, Sunday
+min_n = 5                    # minimum days per group before a flag comparison is shown
+
+[targets.phase1]             # weeks 1-2
+study_days_per_week = 5
+min_minutes_day_counts = 25
+min_minutes_full_day = 90
+weekly_study_minutes = 450
+gym_sessions_per_week = 3
+sleep_hours_min = 7.0
+sleep_hours_aim = 7.5
+project_minutes_per_week = 120   # a floor, not a cap
+project_min_sessions = 2
+video_minutes_per_week = 60
+
+[targets.phase1.subject_minutes_per_week]   # sums to weekly_study_minutes (450)
+golang = 150
+leetcode = 120
+german = 80
+reading = 100
+
+[targets.phase2]             # weeks 3-4
+study_days_per_week = 5
+min_minutes_day_counts = 25
+min_minutes_full_day = 120
+weekly_study_minutes = 600
+gym_sessions_per_week = 3
+sleep_hours_min = 7.0
+sleep_hours_aim = 7.5
+project_minutes_per_week = 120
+project_min_sessions = 2
+video_minutes_per_week = 60
+
+[targets.phase2.subject_minutes_per_week]   # sums to weekly_study_minutes (600)
+golang = 200
+leetcode = 150
+german = 120
+reading = 130

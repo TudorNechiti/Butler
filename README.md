@@ -5,13 +5,15 @@ Personal AI agents I use day to day, sharing one small core.
 | Agent | Status |
 |---|---|
 | Email labeler | running hourly on GitHub Actions |
+| Habit tracker | evening reminder and Sunday report on GitHub Actions (no LLM) |
 | Job scout | planned |
 | Stock news digest | planned |
 
 ## Layout
 
 - `core/`: shared building blocks: config, JSON logging with a field allowlist, a thin Claude client with cost tracking, a Telegram sender, and text sanitising for untrusted input.
-- `agents/<name>/`: one module per agent, each following fetch -> ask Claude -> act -> notify.
+- `agents/<name>/`: one module per agent, each following fetch -> ask Claude -> act -> notify
+  (Claude only where it adds something; the habit tracker is plain code).
 
 ## Development
 
