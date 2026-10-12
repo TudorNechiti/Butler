@@ -31,7 +31,11 @@ jobs:
           HABIT_FORM_URL: ${{ secrets.HABIT_FORM_URL }}
           HABIT_SA_KEY_JSON: ${{ secrets.HABIT_SA_KEY_JSON }}
           EVENT: ${{ github.event_name }}
+          # The cron line that fired. Runs often start hours late, so the code decides from
+          # this, not from the start time.
+          SCHEDULE: ${{ github.event.schedule }}
         run: |
           args=()
           if [ "$EVENT" = "workflow_dispatch" ]; then args+=(--force); fi
+          if [ "$EVENT" = "schedule" ]; then args+=(--scheduled "$SCHEDULE"); fi
           uv run --no-dev python -m agents.habit_tracker reminder "${args[@]}"

@@ -101,6 +101,8 @@ Weekly, Monday-Sunday, against the active phase targets in `config.toml`:
 - **Weekly report**, Sunday at 20:00 Europe/Berlin.
 - GitHub Actions cron is UTC. To survive daylight saving, each workflow is scheduled at both
   UTC hours, and the code exits unless the Berlin local hour matches the configured one.
+  The hour checked is the *scheduled* one (`--scheduled` gets `github.event.schedule`), because
+  GitHub often starts scheduled runs hours late.
 - `--dry-run` prints the message instead of sending it. Blocked in CI: Actions logs of a public
   repo are public. `--force` skips the hour check (manual runs).
 - Keep `run()` free of scheduler specifics (Azure Functions port later).

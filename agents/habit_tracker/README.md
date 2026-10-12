@@ -22,7 +22,9 @@ GitHub Actions ───┤ daily 21:00 Berlin   store.py -> models.py -> no ent
 - `report.py` builds plain text: progress against targets, change versus last week, and a fixed
   "hints, not proof" line. It gives no advice.
 - Cron is UTC, so each workflow runs at both UTC hours that can be 21:00 (or 20:00) in Berlin and
-  the code exits unless the local hour matches. Daylight saving needs no edits.
+  the code exits unless the local hour matches. Daylight saving needs no edits. GitHub often
+  starts scheduled runs hours late, so the check uses the cron line that fired
+  (`github.event.schedule`), not the start time; a late run still sends, just late.
 
 ## Privacy model
 

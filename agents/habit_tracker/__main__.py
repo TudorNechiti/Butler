@@ -1,7 +1,9 @@
-"""CLI: python -m agents.habit_tracker {reminder,weekly} [--dry-run] [--force]
+"""CLI: python -m agents.habit_tracker {reminder,weekly} [--scheduled CRON] [--dry-run] [--force]
 
 Cron runs in UTC, so each workflow is scheduled at both UTC hours that can map to the local
-target hour. Without --force, a run exits quietly unless the local hour matches.
+target hour. Without --force, a run exits quietly unless the local hour matches. With
+--scheduled (the cron line that fired), that hour is the scheduled one, not the start time:
+GitHub often starts scheduled runs hours late.
 
 Exit codes: 0 ok (or not due), 2 the sheet could not be read.
 """
@@ -11,17 +13,18 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
 from agents.habit_tracker.app import reminder, weekly
 from agents.habit_tracker.config import HabitSettings, load_config
 from agents.habit_tracker.models import MissingColumnsError
+from agents.habit_tracker.schedule import scheduled_local_time
 from agents.habit_tracker.store import SheetReadError, SheetsStore
 from core.logging import EventLogger, configure_logging
 from core.telegram import TelegramClient
 
-log = EventLogger(__name__, allowed_fields={"job", "local_hour"})
+log = EventLogger(__name__, allowed_fields={"job", "local_hour", "delay_minutes"})
 
 
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:
@@ -29,6 +32,9 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument("job", choices=["reminder", "weekly"])
     parser.add_argument("--dry-run", action="store_true", help="print the message, send nothing")
     parser.add_argument("--force", action="store_true", help="run now, ignore the scheduled hour")
+    parser.add_argument(
+        "--scheduled", metavar="CRON", help="cron line that fired (UTC); decides the due hour"
+    )
     return parser.parse_args(argv)
 
 
@@ -39,7 +45,15 @@ def main(argv: list[str] | None = None) -> int:
         sys.exit("--dry-run prints personal data and is disabled in CI.")
     configure_logging()
     config = load_config()
-    now = datetime.now(ZoneInfo(config.timezone)).replace(tzinfo=None)
+    now_utc = datetime.now(UTC)
+    now = now_utc.astimezone(ZoneInfo(config.timezone)).replace(tzinfo=None)
+    if args.scheduled and not args.force:
+        # Act as of the scheduled moment, so a late start still checks the intended day.
+        scheduled = scheduled_local_time(args.scheduled, now_utc, config.timezone)
+        log.event(
+            "schedule", job=args.job, delay_minutes=int((now - scheduled).total_seconds() // 60)
+        )
+        now = scheduled
 
     due_hour = config.reminder_hour if args.job == "reminder" else config.weekly_report_hour
     due_day = args.job == "reminder" or now.weekday() == 6  # weekly: Sunday only
