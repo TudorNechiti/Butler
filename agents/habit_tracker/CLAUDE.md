@@ -103,6 +103,9 @@ Weekly, Monday-Sunday, against the active phase targets in `config.toml`:
   UTC hours, and the code exits unless the Berlin local hour matches the configured one.
   The hour checked is the *scheduled* one (`--scheduled` gets `github.event.schedule`), because
   GitHub often starts scheduled runs hours late.
+- Outcomes show on the run page via `core.ci.note` (annotation + run summary): sent, nothing to
+  send, not due, or started over an hour late (warning). The exit code stays for real errors only
+  (sheet unreadable, Telegram failure). Notes are fixed texts and times, never personal values.
 - `--dry-run` prints the message instead of sending it. Blocked in CI: Actions logs of a public
   repo are public. `--force` skips the hour check (manual runs).
 - Keep `run()` free of scheduler specifics (Azure Functions port later).

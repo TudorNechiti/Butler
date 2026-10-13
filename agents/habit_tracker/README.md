@@ -25,6 +25,8 @@ GitHub Actions ───┤ daily 21:00 Berlin   store.py -> models.py -> no ent
   the code exits unless the local hour matches. Daylight saving needs no edits. GitHub often
   starts scheduled runs hours late, so the check uses the cron line that fired
   (`github.event.schedule`), not the start time; a late run still sends, just late.
+- Every run shows its outcome on its Actions page (sent / already logged / skipped / started
+  late), so a green run that sent nothing is explained. Real errors still fail the run.
 
 ## Privacy model
 
