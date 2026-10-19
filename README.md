@@ -6,7 +6,7 @@ Personal AI agents I use day to day, sharing one small core.
 |---|---|
 | Email labeler | running hourly on GitHub Actions |
 | Habit tracker | evening reminder and Sunday report on GitHub Actions (no LLM) |
-| Job scout | planned |
+| Job scout | planned ([design notes](agents/job_scout/CLAUDE.md)) |
 | Stock news digest | planned |
 
 ## Layout
