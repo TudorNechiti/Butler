@@ -1,0 +1,123 @@
+# Non-secret settings for the job scout. Secrets, including my profile text, live in
+# .env / repository secrets.
+
+model = "claude-haiku-4-5"   # must have a price in core/llm.py
+max_tokens = 200             # the answer is a tiny JSON object
+max_calls = 40               # Claude calls per run: the hard cost cap (about $0.08 a run)
+description_chars = 4000     # ad text is cut to this before it reaches Claude
+min_score = 60               # below this a job is not sent
+max_matches = 8              # at most this many jobs per digest
+seen_retention_days = 60     # forget seen jobs after this; a repost after that shows up again
+# No age filter: company boards only list open jobs, and a role can stay open for months.
+# Repeats are prevented by the seen store; Arbeitnow and Adzuna are limited to recent ads below.
+
+[filters]
+# Drop only ads whose *stated* yearly maximum is below this. Most ads state no salary; those
+# pass and Claude weighs any figure in the text. Kept a bit under my real floor on purpose.
+salary_floor_eur = 68000
+title_include = [
+    "backend", "back-end", "back end", "java", "kotlin", "spring", "golang", "go developer",
+    "go engineer", "platform engineer", "software engineer", "software developer",
+    "softwareentwickler", "software-entwickler", "softwareingenieur",
+    # Kubernetes / cloud roles close to backend work:
+    "site reliability", "sre", "devops", "infrastructure engineer", "cloud engineer",
+]
+title_exclude = [
+    "junior", "intern", "internship", "werkstudent", "working student", "student", "praktikum",
+    "praktikant", "trainee", "ausbildung", "lead", "staff", "principal", "head", "manager",
+    "director", "vp", "chief", "architect", "frontend", "front-end", "mobile", "ios", "android",
+]
+onsite_locations = ["berlin"]
+# Remote jobs pass unless the location names a region outside Germany/EU.
+remote_exclude_locations = [
+    "usa", "us", "united states", "canada", "uk", "united kingdom", "india", "latam", "apac",
+    "asia", "americas", "australia", "brazil", "mexico",
+]
+
+[arbeitnow]
+max_pages = 3                # 300 ads per page, newest first
+
+[adzuna]
+country = "de"
+what_or = "backend java golang spring kotlin"
+where = "Berlin"
+max_pages = 2
+results_per_page = 50
+max_days_old = 7
+
+# Starter list: Berlin-based (or Berlin-office) tech companies whose public job boards answered
+# in October 2026. Trim or extend freely: one entry per company.
+[[companies]]
+name = "N26"
+system = "greenhouse"
+slug = "n26"
+
+[[companies]]
+name = "HelloFresh"
+system = "greenhouse"
+slug = "hellofresh"
+
+[[companies]]
+name = "GetYourGuide"
+system = "greenhouse"
+slug = "getyourguide"
+
+[[companies]]
+name = "Contentful"
+system = "greenhouse"
+slug = "contentful"
+
+[[companies]]
+name = "SumUp"
+system = "greenhouse"
+slug = "sumup"
+
+[[companies]]
+name = "Grover"
+system = "greenhouse"
+slug = "grover"
+
+[[companies]]
+name = "Raisin"
+system = "greenhouse"
+slug = "raisin"
+
+[[companies]]
+name = "Solaris"
+system = "greenhouse"
+slug = "solarisbank"
+
+[[companies]]
+name = "Doctolib"
+system = "greenhouse"
+slug = "doctolib"
+
+[[companies]]
+name = "Wolt"
+system = "greenhouse"
+slug = "wolt"
+
+[[companies]]
+name = "Enpal"
+system = "ashby"
+slug = "enpal"
+
+[[companies]]
+name = "Forto"
+system = "ashby"
+slug = "forto"
+
+[[companies]]
+name = "Babbel"
+system = "ashby"
+slug = "babbel"
+
+[[companies]]
+name = "FINN"
+system = "lever"
+slug = "finn"
+
+[[companies]]
+name = "1KOMMA5°"
+system = "personio"
+slug = "1komma5grad"

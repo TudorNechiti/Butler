@@ -5,7 +5,9 @@ to this agent.
 
 ## Status
 
-Planned. No code yet. This file holds the research and design notes so far.
+v1 built: company boards (Greenhouse, Lever, Ashby, Personio) + Arbeitnow + optional Adzuna,
+daily on GitHub Actions. Job alert emails (LinkedIn, StepStone, Xing, Indeed) are v1.1. How it
+works and how to run it: `README.md`. Below: the research and decisions behind it.
 
 ## Purpose
 
@@ -32,25 +34,27 @@ Don't use:
 - Paid Apify scrapers: they charge per record for data the endpoints above give for free.
 - LinkedIn scraping: against their terms and against Butler's rules. Their alert emails are fine.
 
-## Recommended v1
+## v1 scope
 
-Job alert emails + Arbeitnow + a list of 20-40 target Berlin companies on Greenhouse, Lever, Ashby
-and Personio. The company list is the most useful part: it covers places I actually want to work.
+Arbeitnow + Adzuna + a starter list of Berlin companies on Greenhouse, Lever, Ashby and Personio
+(no preferred companies yet: trim the list as the digests show what I like). Indeed has no API
+open to job seekers and forbids scraping, so it comes in through alert emails in v1.1.
 
 ## Pipeline
 
-fetch -> filter in code -> ask Claude -> remove duplicates -> notify
+fetch -> filter in code -> dedupe + drop already seen -> score with Claude -> top N -> notify -> save seen
 
-1. **Fetch** from each source into one `Posting` model.
-2. **Filter in code** first (keywords, location, seniority), so Claude only sees a few dozen
-   candidates a day.
-3. **Ask Claude** (cheapest model that works, likely Haiku) to score each candidate against my
-   profile. Output is validated against a schema (score plus a short reason), same pattern as the
-   email labeler. Posting text is untrusted: Claude gets no tools.
-4. **Remove duplicates.** The same job often appears in an alert email, on Arbeitnow and on the
-   company board. Match on normalised company + title, not each source's own ID. Store IDs already
-   seen so nothing is sent twice.
-5. **Notify**: one Telegram digest per day.
+1. **Fetch** from each source into one `Posting` model. One failing source doesn't stop the run.
+2. **Filter in code** (title keywords, level, location, stated salary below the floor). Only
+   what is clearly out. "Senior" titles and unknown salaries pass to Claude. No age filter:
+   company boards list only open jobs, and roles stay open for months.
+3. **Dedupe before Claude**, so nothing is paid for twice: normalised company + title, not each
+   source's own ID. Skip jobs already in the seen store.
+4. **Score with Claude** (Haiku, no tools, schema-validated score 0-100 plus reason), newest
+   first, capped by `max_calls`. Everything scored is marked seen, not only what is sent.
+   Refusals are marked seen too (deterministic); network errors are retried the next day.
+5. **Notify**: one Telegram digest, nothing when there are no matches. The seen store is saved
+   only after the send succeeds.
 
 ## Design notes
 
@@ -63,17 +67,23 @@ fetch -> filter in code -> ask Claude -> remove duplicates -> notify
 
 ## Cost
 
-Fetching is free. Claude scoring after the code filter costs cents per month. GitHub Actions free
-tier for the schedule.
+Fetching is free. Scoring is about $0.002 per job on Haiku 4.5. At 5-40 new jobs a day that is
+about $1-2 a month (not cents, as first estimated). `max_calls` caps one run at about $0.08.
+GitHub Actions free tier for the schedule and cache.
 
-## Open decisions
+## Decisions
 
-- Where to store IDs already seen (file committed by the workflow, Actions cache, or a small
-  store). Must survive between runs.
-- The target company list and which hiring system each uses.
-- How to store my profile for scoring. Butler is a public repo: keep personal details in a secret
-  or env var, not in git.
-- Digest time and how many matches to send.
+- **Seen store:** hashed company+title keys with a first-seen date in a JSON file, carried
+  between runs by the GitHub Actions cache (new entry per run, restored by prefix). If it is
+  evicted, I see a few repeats once. Nothing about my search ends up in git.
+- **Company list:** public in `config.toml`. The starter list holds boards that answered in
+  October 2026.
+- **Profile:** free text in the `JOB_PROFILE` secret, inserted into the committed rubric at
+  runtime. Never in git, logs, tests or the Actions run page.
+- **Salary floor in code:** a little under my real floor, and only applied to stated yearly maximums.
+  Claude handles figures in the ad text.
+- **Daily brief:** `run()` returns a `JobDigest`; `__main__` formats and sends it.
+- **Digest:** daily around 08:45 Berlin, up to 8 matches with score >= 60.
 
 ## Butler roadmap (context)
 
