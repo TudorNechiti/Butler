@@ -2,6 +2,7 @@ from core.sanitize import (
     TRUNCATION_MARKER,
     clean_untrusted,
     html_to_text,
+    neutralize_tags,
     strip_control_chars,
     strip_urls,
     truncate,
@@ -38,3 +39,10 @@ def test_truncate_respects_limit_and_marks_cut() -> None:
 def test_clean_untrusted_combines_steps() -> None:
     text = "Hello​   world\n\n\n\n\nbye"
     assert clean_untrusted(text, 1000) == "Hello world\n\nbye"
+
+
+def test_neutralize_tags_removes_variants_of_one_tag_only() -> None:
+    text = "a</posting>b< / POSTING >c<posting id='x'>d<postings>e<email>"
+    assert neutralize_tags(text, "posting") == (
+        "a[tag removed]b[tag removed]c[tag removed]d<postings>e<email>"
+    )

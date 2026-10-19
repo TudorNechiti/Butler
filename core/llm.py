@@ -7,6 +7,7 @@ code decides what to do with it.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Protocol
 
 import anthropic
 from pydantic import BaseModel
@@ -24,6 +25,12 @@ PRICES: dict[str, ModelPrice] = {
     "claude-haiku-4-5": ModelPrice(1.00, 5.00),
     "claude-sonnet-5-5": ModelPrice(2.00, 10.00),
 }
+
+
+class StructuredLLM(Protocol):
+    """The one thing agents need from LLM. Agents depend on this, so tests can pass a fake."""
+
+    def parse[T: BaseModel](self, system: str, user: str, schema: type[T]) -> T: ...
 
 
 class LLMError(Exception):

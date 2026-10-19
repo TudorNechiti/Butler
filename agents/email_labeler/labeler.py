@@ -14,7 +14,7 @@ from typing import Protocol
 
 from pydantic import BaseModel
 
-from agents.email_labeler.classifier import StructuredLLM, classify
+from agents.email_labeler.classifier import classify
 from agents.email_labeler.gmail import (
     PROCESSED_LABEL,
     REVIEW_LABEL,
@@ -23,7 +23,7 @@ from agents.email_labeler.gmail import (
 )
 from agents.email_labeler.models import Classification, EmailMessage
 from core.config import load_toml
-from core.llm import CallLimitExceeded, LLMError
+from core.llm import CallLimitExceeded, LLMError, StructuredLLM
 from core.logging import EventLogger
 
 CONFIG_PATH = Path(__file__).parent / "config.toml"

@@ -76,6 +76,16 @@ def truncate(text: str, max_chars: int) -> str:
     return text[: max(0, max_chars - len(TRUNCATION_MARKER))] + TRUNCATION_MARKER
 
 
+def neutralize_tags(text: str, tag: str) -> str:
+    """Replace <tag>, </tag> and variants with spaces or attributes.
+
+    Prompts wrap untrusted content in <tag>...</tag>. This stops the content from closing that
+    delimiter early and posing as text outside the untrusted block.
+    """
+    pattern = re.compile(rf"<\s*/?\s*{re.escape(tag)}\b[^>]*>", re.IGNORECASE)
+    return pattern.sub("[tag removed]", text)
+
+
 def clean_untrusted(text: str, max_chars: int) -> str:
     """Standard pipeline for untrusted plain text: hidden chars out, whitespace tidied, bounded."""
     return truncate(normalize_whitespace(strip_control_chars(text)), max_chars)
