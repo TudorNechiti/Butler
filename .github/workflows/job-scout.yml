@@ -1,0 +1,68 @@
+name: Job scout
+
+on:
+  schedule:
+    # Cron is UTC: 08:47 Berlin in summer, 07:47 in winter. The exact hour doesn't matter here.
+    - cron: "47 6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Score only: send nothing, save nothing"
+        type: boolean
+        default: true
+      max:
+        description: "Max Claude calls this run (empty = config default)"
+        type: string
+        default: "5"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: job-scout
+  cancel-in-progress: false
+
+env:
+  SEEN_FILE: .cache/job_scout/seen.json
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked --no-dev
+      # Hashes of jobs already scored, carried between runs. Each save is a new cache entry
+      # (entries are immutable); restore picks the newest one by prefix. Losing it only means
+      # a few repeats once.
+      - name: Restore seen jobs
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.SEEN_FILE }}
+          key: job-scout-seen-${{ github.run_id }}
+          restore-keys: job-scout-seen-
+      - name: Run job scout
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          JOB_PROFILE: ${{ secrets.JOB_PROFILE }}
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          # Inputs go through env, never straight into the script, to avoid shell injection.
+          DRY_RUN: ${{ inputs.dry_run }}
+          MAX_CALLS: ${{ inputs.max }}
+        run: |
+          # An unset optional secret arrives as an empty string; unset it so it counts as absent.
+          [ -n "$ADZUNA_APP_ID" ] || unset ADZUNA_APP_ID ADZUNA_APP_KEY
+          args=(--seen-file "$SEEN_FILE")
+          if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          if [ -n "$MAX_CALLS" ]; then args+=(--max "$MAX_CALLS"); fi
+          uv run --no-dev python -m agents.job_scout "${args[@]}"
+      - name: Save seen jobs
+        if: success() && inputs.dry_run != true
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.SEEN_FILE }}
+          key: job-scout-seen-${{ github.run_id }}-${{ github.run_attempt }}

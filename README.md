@@ -6,7 +6,7 @@ Personal AI agents I use day to day, sharing one small core.
 |---|---|
 | Email labeler | running hourly on GitHub Actions |
 | Habit tracker | evening reminder and Sunday report on GitHub Actions (no LLM) |
-| Job scout | planned ([design notes](agents/job_scout/CLAUDE.md)) |
+| Job scout | daily digest of scored backend jobs on GitHub Actions ([README](agents/job_scout/README.md)) |
 | Stock news digest | planned |
 
 ## Layout
@@ -27,5 +27,5 @@ Tests never call external APIs. Tests marked `live` cost money and only run with
 ## Security model
 
 - Secrets come only from env vars (`.env` locally, repository secrets in CI). See `.env.example`.
-- Email and web content are untrusted. Claude gets no tools; its output is a schema-validated enum that plain code maps to an action.
+- Email and web content are untrusted. Claude gets no tools; its output is schema-validated (a category, a score) and plain code decides what happens.
 - Logs carry only ids, counts and categories, never message content. This is enforced by `core.logging.EventLogger`.
