@@ -9,6 +9,9 @@ client_secret*.json
 # Real (anonymised) emails used for the live eval
 tests/**/private/
 
+# Local agent state (job scout seen-jobs file)
+.cache/
+
 # Python
 __pycache__/
 *.py[cod]
